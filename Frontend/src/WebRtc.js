@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import io from 'socket.io-client';
+import { v1 as uuid } from 'uuid';
 import Peers from './Peers';
 import Query from './Query';
 import Request from './Request';
 import Form from './Form';
+import { Link } from 'react-router-dom';
 
 let config = {
   'iceServers': [
@@ -39,10 +41,12 @@ class WebRtc extends Component {
     this.state = {
       active: [],
       response: [],
-      request: []
+      request: [],
+      yy: false
     }
 
     this.handleQuery = this.handleQuery.bind(this);
+    this.handleClick = this.handleClick.bind(this);
   }
 
   setDefaultChannel = () => {
@@ -73,7 +77,7 @@ class WebRtc extends Component {
     defaultChannel.on('ready', (newParticipantID) => {
       console.log('Socket is ready');
       // appender(newParticipantID, 'joined the room.', localScreen);
-      this.setState(prev => ({ active: [...prev.active, newParticipantID] }));
+      this.setState(prev => ({ active: [...prev.active, { active: newParticipantID, key: uuid() }] }));
     });
 
     // For creating offers and receiving answers(of offers sent).
@@ -126,8 +130,7 @@ class WebRtc extends Component {
 
   joinRoom = (roomName) => {
     myRoom = roomName;
-    myID = this.generateID();
-    alert(`Your ID is ${myID}.`)
+    myID = this.props.id;
 
     console.log('My Id: ' + myID);
 
@@ -158,13 +161,20 @@ class WebRtc extends Component {
     console.log('Bye Received from client: ' + from);
 
     if (opc.hasOwnProperty(from)) {
-      opc[from].close();
-      opc[from] = null;
+      if (opc[from] !== null) {
+        opc[from].close();
+        opc[from].onicecandidate = null;
+        opc[from] = null;
+      }
+
     }
 
     if (apc.hasOwnProperty(from)) {
-      apc[from].close();
-      apc[from] = null;
+      if (apc[from] !== null) {
+        apc[from].close();
+        apc[from].onicecandidate = null;
+        apc[from] = null;
+      }
     }
 
     if (sendChannel.hasOwnProperty(from)) {
@@ -172,7 +182,7 @@ class WebRtc extends Component {
     }
 
     // appender(from, 'left the room', localScreen);
-    let active = this.state.active.filter(peer => peer !== from);
+    let active = this.state.active.filter(peer => peer.active !== from);
     this.setState({ active: active });
   }
 
@@ -241,7 +251,8 @@ class WebRtc extends Component {
     apc[to].createAnswer(LocalSession(channel), this.logError);
 
     // appender(to, ' is in the room', localScreen);
-    this.setState(prevState => ({ active: [...prevState.active, to] }));
+
+    this.setState(prevState => ({ active: [...prevState.active, { active: to, key: uuid() }] }));
   }
 
   // Data Channel Setup
@@ -257,6 +268,7 @@ class WebRtc extends Component {
   ChannelStateChangeClose = (channel) => {
     return () => {
       console.log('Channel closed: ' + channel);
+      delete sendChannel[channel];
     }
   }
 
@@ -301,7 +313,8 @@ class WebRtc extends Component {
   receiveMessage = () => {
     let count = 0, currCount, str;
     return onmessage = (event) => {
-      // console.log(event.data);
+      if (event.data.source === "react-devtools-content-script" || event.data.payload) return;
+      console.log(event.data);
       if (event.data[0] === '-') {
         this.ParticipationClose(event.data.substr(1));
         return;
@@ -318,7 +331,6 @@ class WebRtc extends Component {
       let data = event.data;
       str += data;
       currCount += str.length;
-      console.log(str);
       console.log(`Received ${currCount} characters of data.`);
 
       if (currCount === count) {
@@ -435,7 +447,7 @@ class WebRtc extends Component {
 
     console.log('Sent all Data!');
     // this.appender(target, query, requestScreen);
-    this.setState(prevState => ({ request: [...prevState.request, { "from": target, "query": query }] }))
+    this.setState(prevState => ({ request: [...prevState.request, { from: target, query: query, key: uuid() }] }))
   }
 
   renderMessage = (data) => {
@@ -455,23 +467,16 @@ class WebRtc extends Component {
         let res = this.state.response.map(r => {
           if (r.query === query) {
             atleast = true;
-            return { "query": query, "datas": [...r.datas, text] }
+            return { query: r.query, datas: [...r.datas, { sender: sender, text: text, key: uuid() }], key: r.key }
           }
           return r;
         })
         if (atleast) this.setState({ response: res });
-        else this.setState(st => ({ response: [...st.response, { "query": query, "datas": [text] }] }))
+        else this.setState(st => ({ response: [...st.response, { query: query, datas: [{ sender: sender, text: text, key: uuid() }], key: uuid() }] }))
       }
     }
   }
 
-  // Generator for USER ID
-  generateID = () => {
-    let s4 = function () {
-      return Math.floor(Math.random() * 0x10000).toString(16);
-    };
-    return s4() + '-' + s4();
-  }
 
   logError = (err) => {
     if (!err) return;
@@ -488,6 +493,15 @@ class WebRtc extends Component {
   }
 
   componentDidMount() {
+    socket = io('http://localhost:3000');
+    opc = {};
+    apc = {};
+    offerChannel = {};
+    sendChannel = {};
+
+    defaultChannel = socket;
+    privateChannel = socket;
+
     let room = this.props.room;
 
     this.joinRoom(room);
@@ -497,9 +511,28 @@ class WebRtc extends Component {
     this.globalSend(query.query);
   }
 
+  componentWillUnmount() {
+    if (navigator.userAgent.indexOf("Chrome") !== -1) {
+      for (let key in sendChannel) {
+        if (sendChannel.hasOwnProperty(key) && sendChannel[key].readyState === 'open') {
+          sendChannel[key].send(`-${myID}`);
+        }
+      }
+    } else {
+      socket.emit('message', { type: 'bye', from: myID });
+    }
+    socket.close();
+  }
+
+  handleClick() {
+    socket.emit('message', { type: 'bye', from: myID });
+    socket.close();
+  }
+
   render() {
     return (
       <div>
+        <button onClick={this.handleClick}><Link to="/">hds</Link></button>
         <Query queries={this.state.response} />
         <Request requests={this.state.request} />
         <Peers peers={this.state.active} />
