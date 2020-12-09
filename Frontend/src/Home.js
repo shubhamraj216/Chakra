@@ -12,7 +12,8 @@ class Home extends Component {
     this.state = {
       rooms: [],
       newRoom: "",
-      searchRoom: ""
+      searchRoom: "",
+      fetching: true
     }
     this.handleNewRoomChange = this.handleNewRoomChange.bind(this);
     this.handleNewRoomSubmit = this.handleNewRoomSubmit.bind(this);
@@ -43,16 +44,30 @@ class Home extends Component {
   }
 
   handleSearchRoomChange(evt) {
-    this.setState({[evt.target.name]: evt.target.value});
+    this.setState({ [evt.target.name]: evt.target.value });
   }
 
   async componentDidMount() {
     let getRooms = await axios('/getRooms');
     console.log(getRooms.data);
     let rooms = getRooms.data.map(room => ({ room: room, key: uuid() }));
-    this.setState({ rooms: rooms });
+    setTimeout(() => this.setState({ rooms: rooms, fetching: false }), 1000);
   }
   render() {
+    if (this.state.fetching) {
+      return <div class="Home-Box-parent">
+        <div class="Home-Box">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <h2>Getting Rooms...</h2>
+      </div>
+    }
+
     let searchRooms = this.state.rooms.filter(room => room.room.toLowerCase().includes(this.state.searchRoom.toLowerCase()));
     let rooms = searchRooms.map(room =>
       <Link key={room.key}
@@ -64,12 +79,12 @@ class Home extends Component {
     )
     return (
       <div class="Home row">
-        <NewRoom value={this.state.newRoom} 
-                 handleChange={this.handleNewRoomChange} 
-                 handleSubmit={this.handleNewRoomSubmit} 
+        <NewRoom value={this.state.newRoom}
+          handleChange={this.handleNewRoomChange}
+          handleSubmit={this.handleNewRoomSubmit}
         />
-        <SearchRoom value ={this.state.searchRoom}
-                    handleChange={this.handleSearchRoomChange}
+        <SearchRoom value={this.state.searchRoom}
+          handleChange={this.handleSearchRoomChange}
         />
         {rooms}
       </div>
