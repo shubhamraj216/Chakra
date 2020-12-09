@@ -9,3 +9,7 @@
   background-color: #333;
   color: white;
 }
+
+.SearchRoom-input:focus {
+  outline: none;
+}
