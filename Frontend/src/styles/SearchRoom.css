@@ -1,0 +1,11 @@
+.SearchRoom {
+  line-height: 2;
+}
+
+.SearchRoom-input {
+  width: 60%;
+  text-align: center;
+  margin-top: 1em;
+  background-color: #333;
+  color: white;
+}

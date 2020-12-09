@@ -1,0 +1,36 @@
+.NewRoom {
+  line-height: 2;
+  /* text-align: center; */
+}
+
+.NewRoom-input {
+  width: 60%;
+  margin: 10px;
+  text-align: center;
+  background-color: #333;
+  color: white;
+}
+
+.NewRoom-input:focus {
+  outline: none;
+}
+
+.NewRoom-button {
+  width: 30%;
+  margin: 10px;
+  color: white;
+  background-color: #0000002c;
+  border: 10px solid #111111;
+  border-radius: 40px;
+  line-height: 2.5;
+}
+
+.NewRoom-button:hover {
+  color:#000000;
+  background-color: rgb(163, 162, 162);
+  border: 10px solid #111111;
+}
+
+.NewRoom-button:focus {
+  outline: none;
+}

@@ -1,0 +1,14 @@
+.NavBar {
+  width: 100%;
+  background-color: #090909;
+  color: #efefef;
+}
+
+.NavBar-img {
+  width: 2em;
+  height: 2em;
+}
+
+.Navbar-text {
+  text-align: end;
+}

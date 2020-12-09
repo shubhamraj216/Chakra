@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
-import './App.css';
+import './styles/App.css';
 import Router from './Router';
+import NavBar from './NavBar';
 
 class App extends Component {
   constructor() {
@@ -11,11 +12,10 @@ class App extends Component {
     }
   }
   componentDidMount() {
-    let name = "/";
-    while (!name.search('/')) {
-      name = prompt("Enter your handle");
-    }
-    this.setState({name: `${name}/${this.generateID()}`})
+    let name = ""
+    while (name === "") name = prompt("Enter your user handle. Dont use slash (/).");
+
+    this.setState({ name: `${name}/${this.generateID()}` })
   }
 
   // Generator for USER ID
@@ -29,7 +29,8 @@ class App extends Component {
     return (
       <div className="App">
         <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" style={{ position: "absolute" }} />
+          <img src={logo} className="App-logo" alt="logo" />
+          <NavBar name={this.state.name} />
           <Router id={this.state.name} />
         </header>
       </div>

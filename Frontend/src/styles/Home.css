@@ -1,0 +1,21 @@
+.Home {
+  display: flexbox;
+  justify-content: center;
+  margin-top: 5%;
+}
+
+.Home-room {
+  width: 100%;
+  line-height: 3;
+  height: 10%;
+  color: white;
+  background-color: #4444442c;
+  border: 10px solid #111111;
+  border-radius: 40px;
+}
+
+.Home-room:hover {
+  color: #000;
+  background-color: #eeeeee3a;
+  text-decoration: none;
+}

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import './styles/Form.css'
 
 class Form extends Component {
   constructor(props) {
@@ -26,15 +27,16 @@ class Form extends Component {
   render() {
     return (
       <div>
-        <form onSubmit={this.handleSubmit}>
-          <label htmlFor="query">Search Query: </label>
+        <form onSubmit={this.handleSubmit} class='Form'>
           <input type='text'
             id='query'
             name='query'
+            placeholder='Search Query'
+            class ='Form-input'
             value={this.state.query}
             onChange={this.handleChange}
           />
-          <button>Search!</button>
+          <button class='Form-button'>Search!</button>
         </form>
       </div>
     );

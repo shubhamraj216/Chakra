@@ -6,6 +6,7 @@ import Query from './Query';
 import Request from './Request';
 import Form from './Form';
 import { Link } from 'react-router-dom';
+import './styles/WebRtc.css';
 
 let config = {
   'iceServers': [
@@ -463,82 +464,87 @@ class WebRtc extends Component {
     } else {
       // (sender === myID) && postResultFromDB(); post your results
       if (sender !== myID) {
-        let atleast = false;
-        let res = this.state.response.map(r => {
-          if (r.query === query) {
-            atleast = true;
-            return { query: r.query, datas: [...r.datas, { sender: sender, text: text, key: uuid() }], key: r.key }
-          }
-          return r;
-        })
-        if (atleast) this.setState({ response: res });
-        else this.setState(st => ({ response: [...st.response, { query: query, datas: [{ sender: sender, text: text, key: uuid() }], key: uuid() }] }))
+        // let atleast = false;
+        // let res = this.state.response.map(r => {
+        //   if (r.query === query) {
+        //     atleast = true;
+        //     return { query: r.query, datas: [...r.datas, { sender: sender, text: text, key: uuid() }], key: r.key }
+        //   }
+        //   return r;
+        // })
+        // if (atleast) this.setState({ response: res });
+        // else
+        this.setState(st => ({ response: [...st.response, { query: query, datas: [{ sender: sender, text: text, key: uuid() }], key: uuid() }] }))
+    }
+  }
+}
+
+
+logError = (err) => {
+  if (!err) return;
+  if (typeof err === 'string') {
+    console.warn(err);
+  } else {
+    console.warn(err.toString(), err);
+  }
+}
+
+randomx = () => {
+  let idx = Math.floor(Math.random() * urls.length);
+  return urls[idx];
+}
+
+componentDidMount() {
+  socket = io('http://localhost:3000');
+  opc = {};
+  apc = {};
+  offerChannel = {};
+  sendChannel = {};
+
+  defaultChannel = socket;
+  privateChannel = socket;
+
+  let room = this.props.room;
+
+  this.joinRoom(room);
+}
+
+handleQuery(query) {
+  this.globalSend(query.query);
+}
+
+componentWillUnmount() {
+  if (navigator.userAgent.indexOf("Chrome") !== -1) {
+    for (let key in sendChannel) {
+      if (sendChannel.hasOwnProperty(key) && sendChannel[key].readyState === 'open') {
+        sendChannel[key].send(`-${myID}`);
       }
     }
-  }
-
-
-  logError = (err) => {
-    if (!err) return;
-    if (typeof err === 'string') {
-      console.warn(err);
-    } else {
-      console.warn(err.toString(), err);
-    }
-  }
-
-  randomx = () => {
-    let idx = Math.floor(Math.random() * urls.length);
-    return urls[idx];
-  }
-
-  componentDidMount() {
-    socket = io('http://localhost:3000');
-    opc = {};
-    apc = {};
-    offerChannel = {};
-    sendChannel = {};
-
-    defaultChannel = socket;
-    privateChannel = socket;
-
-    let room = this.props.room;
-
-    this.joinRoom(room);
-  }
-
-  handleQuery(query) {
-    this.globalSend(query.query);
-  }
-
-  componentWillUnmount() {
-    if (navigator.userAgent.indexOf("Chrome") !== -1) {
-      for (let key in sendChannel) {
-        if (sendChannel.hasOwnProperty(key) && sendChannel[key].readyState === 'open') {
-          sendChannel[key].send(`-${myID}`);
-        }
-      }
-    } else {
-      socket.emit('message', { type: 'bye', from: myID });
-    }
-    socket.close();
-  }
-
-  handleClick() {
+  } else {
     socket.emit('message', { type: 'bye', from: myID });
-    socket.close();
   }
+  socket.close();
+}
 
-  render() {
-    return (
-      <div>
-        <button onClick={this.handleClick}><Link to="/">hds</Link></button>
+handleClick() {
+  socket.emit('message', { type: 'bye', from: myID });
+  socket.close();
+}
+
+render() {
+  return (
+    <div class="WebRtc">
+      <div class="row">
         <Query queries={this.state.response} />
         <Request requests={this.state.request} />
         <Peers peers={this.state.active} />
-        <Form search={this.handleQuery} />
       </div>
-    );
-  }
+      <div class="WebRtc-bottom">
+        <Form search={this.handleQuery} class="WebRtc-form" />
+        <button onClick={this.handleClick} class="WebRtc-back"><Link to="/" class="WebRtc-link">Exit Room</Link></button>
+      </div>
+    </div>
+  );
+}
 }
 export default WebRtc;
