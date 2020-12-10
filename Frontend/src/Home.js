@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { v1 as uuid } from 'uuid';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faRedo } from '@fortawesome/free-solid-svg-icons'
 import NewRoom from './NewRoom';
 import SearchRoom from './SearchRoom';
 import './styles/Home.css';
@@ -13,12 +15,15 @@ class Home extends Component {
       rooms: [],
       newRoom: "",
       searchRoom: "",
-      fetching: true
+      fetching: true,
+      clicked: false
     }
     this.handleNewRoomChange = this.handleNewRoomChange.bind(this);
     this.handleNewRoomSubmit = this.handleNewRoomSubmit.bind(this);
 
     this.handleSearchRoomChange = this.handleSearchRoomChange.bind(this);
+
+    this.handleClick = this.handleClick.bind(this);
   }
 
   handleNewRoomChange(evt) {
@@ -47,12 +52,24 @@ class Home extends Component {
     this.setState({ [evt.target.name]: evt.target.value });
   }
 
+  handleClick() {
+    this.setState(st => ({ clicked: !st.clicked, fetching: !st.fetching }));
+  }
+
   async componentDidMount() {
     let getRooms = await axios('/getRooms');
-    console.log(getRooms.data);
     let rooms = getRooms.data.map(room => ({ room: room, key: uuid() }));
     setTimeout(() => this.setState({ rooms: rooms, fetching: false }), 1000);
   }
+
+  async componentDidUpdate(prevProps, prevState) {
+    if (prevState.clicked !== this.state.clicked) {
+      let getRooms = await axios('/getRooms');
+      let rooms = getRooms.data.map(room => ({ room: room, key: uuid() }));
+      setTimeout(() => this.setState({ rooms: rooms, fetching: false }), 500);
+    }
+  }
+
   render() {
     if (this.state.fetching) {
       return <div class="Home-Box-parent">
@@ -86,6 +103,7 @@ class Home extends Component {
         <SearchRoom value={this.state.searchRoom}
           handleChange={this.handleSearchRoomChange}
         />
+        <button onClick={this.handleClick} class="row-3 Home-refresh"><FontAwesomeIcon className='Home-fa' icon={faRedo} />Refresh List</button>
         {rooms}
       </div>
     );

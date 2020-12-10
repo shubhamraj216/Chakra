@@ -4,9 +4,9 @@ import './styles/SearchRoom.css';
 class SearchRoom extends Component {
   render() {
     return (
-      <form class="col-6 SearchRoom">
-        <input 
-          class ="SearchRoom-input"
+      <form class="col-4 SearchRoom">
+        <input
+          class="SearchRoom-input"
           type="text"
           name="searchRoom"
           placeholder="Search Room"
