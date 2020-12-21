@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './styles/App.css';
 import Router from './Router';
 import NavBar from './NavBar';
+import { nameFun } from './Usernames.js';
 
 class App extends Component {
   constructor() {
@@ -12,8 +13,8 @@ class App extends Component {
     }
   }
   componentDidMount() {
-    let name = ""
-    while (name === "") name = prompt("Enter your user handle. Dont use slash (/).");
+    let name = nameFun();
+    // while (name === "") name = prompt("Enter your user handle. Dont use slash (/).");
 
     this.setState({ name: `${name}/${this.generateID()}` })
   }

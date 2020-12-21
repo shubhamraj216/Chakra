@@ -550,6 +550,7 @@ class WebRtc extends Component {
     }
     return (
       <div class="WebRtc">
+        <h3>Room: {this.props.room}</h3>
         <div class="row">
           <Query queries={this.state.response} />
           <Request requests={this.state.request} />

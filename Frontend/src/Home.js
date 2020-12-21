@@ -103,7 +103,7 @@ class Home extends Component {
         <SearchRoom value={this.state.searchRoom}
           handleChange={this.handleSearchRoomChange}
         />
-        <button onClick={this.handleClick} class="row-3 Home-refresh"><FontAwesomeIcon className='Home-fa' icon={faRedo} />Refresh List</button>
+        <button onClick={this.handleClick} class="col-lg-3 col-xs-12 Home-refresh"><FontAwesomeIcon className='Home-fa' icon={faRedo} />Refresh</button>
         {rooms}
       </div>
     );

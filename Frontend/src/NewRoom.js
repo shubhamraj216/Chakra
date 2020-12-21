@@ -3,7 +3,7 @@ import './styles/NewRoom.css';
 class NewRoom extends Component {
   render() {
     return (
-      <form class="col-5 NewRoom" onSubmit={this.props.handleSubmit}>
+      <form class="col-lg-5 col-xs-12 NewRoom" onSubmit={this.props.handleSubmit}>
         <input
           class="NewRoom-input"
           type="text"
@@ -12,7 +12,7 @@ class NewRoom extends Component {
           value={this.props.value}
           onChange={this.props.handleChange}
         />
-        <button class="NewRoom-button">Create Room</button>
+        <button class="NewRoom-button">Create</button>
       </form>
     );
   }
