@@ -1,6 +1,7 @@
 {
   "name": "frontend",
   "version": "0.1.0",
+  "author": "Shubham Raj",
   "private": true,
   "proxy": "http://localhost:3001",
   "dependencies": {
