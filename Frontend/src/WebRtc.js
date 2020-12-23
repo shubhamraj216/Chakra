@@ -3,10 +3,15 @@ import io from 'socket.io-client';
 import { v1 as uuid } from 'uuid';
 import Peers from './Peers';
 import Query from './Query';
-import Request from './Request';
+// import Request from './Request';
 import Form from './Form';
 import { Link } from 'react-router-dom';
 import './styles/WebRtc.css';
+import { mongoSearch, compare } from './MongoHelp';
+var MongoClient = window.require('mongodb').MongoClient;
+var url = "mongodb://localhost:27017/";
+let collection;
+
 
 let config = {
   'iceServers': [
@@ -42,8 +47,10 @@ class WebRtc extends Component {
     this.state = {
       active: [],
       response: [],
+      query: "",
       request: [],
-      joining: true
+      joining: true,
+      now: new Date()
     }
 
     this.handleQuery = this.handleQuery.bind(this);
@@ -77,7 +84,6 @@ class WebRtc extends Component {
 
     defaultChannel.on('ready', (newParticipantID) => {
       console.log('Socket is ready');
-      // appender(newParticipantID, 'joined the room.', localScreen);
       this.setState(prev => ({ active: [...prev.active, { active: newParticipantID, key: uuid() }] }));
     });
 
@@ -87,7 +93,7 @@ class WebRtc extends Component {
         console.log('Client received message for New Participation:', message);
         let partID = message.from;
 
-        offerChannel[partID] = socket; // same communication channel to new participant
+        offerChannel[partID] = socket;
 
         offerChannel[partID].on('message', (msg) => {
           if (msg.dest === myID) {
@@ -157,7 +163,7 @@ class WebRtc extends Component {
     }
   }
 
-  // when someone in room says Bye
+  // When someone in room says Bye
   ParticipationClose = (from) => {
     console.log('Bye Received from client: ' + from);
 
@@ -182,7 +188,6 @@ class WebRtc extends Component {
       delete sendChannel[from];
     }
 
-    // appender(from, 'left the room', localScreen);
     let active = this.state.active.filter(peer => peer.active !== from);
     this.setState({ active: active });
   }
@@ -251,8 +256,6 @@ class WebRtc extends Component {
     }
     apc[to].createAnswer(LocalSession(channel), this.logError);
 
-    // appender(to, ' is in the room', localScreen);
-
     this.setState(prevState => ({ active: [...prevState.active, { active: to, key: uuid() }] }));
   }
 
@@ -296,7 +299,6 @@ class WebRtc extends Component {
     return open;
   }
 
-  // Enable/ Disable Buttons
   enableDisable = (open) => {
     if (open) {
       console.log('CHANNEL opened!!!');
@@ -343,9 +345,9 @@ class WebRtc extends Component {
     };
   }
 
-  globalSend = (query) => {
-    // Split message.
-    let CHUNK_LEN = 4000; // 64000
+  globalSend = async (query) => {
+    this.setState({ now: new Date() / 1000 , response: []})
+    let CHUNK_LEN = 4000;
 
     let resObj = {};
     resObj['sender'] = myID;
@@ -355,7 +357,7 @@ class WebRtc extends Component {
       return;
     }
     resObj['query'] = query;
-    resObj['response'] = query;
+    resObj['data'] = query;
 
     let data = JSON.stringify(resObj);
 
@@ -368,7 +370,6 @@ class WebRtc extends Component {
       return;
     }
 
-    // length of data
     for (let key in sendChannel) {
       if (sendChannel.hasOwnProperty(key) && sendChannel[key].readyState === 'open') {
         console.log("Global: Sending a data of length: " + len);
@@ -376,7 +377,6 @@ class WebRtc extends Component {
       }
     }
 
-    // split the text and send in chunks of about 64KB
     for (let key in sendChannel) {
       if (sendChannel.hasOwnProperty(key) && sendChannel[key].readyState === 'open') {
         for (let i = 0; i < n; i++) {
@@ -388,7 +388,6 @@ class WebRtc extends Component {
       }
     }
 
-    // send the remainder
     for (let key in sendChannel) {
       if (sendChannel.hasOwnProperty(key) && sendChannel[key].readyState === 'open') {
         if (len % CHUNK_LEN) {
@@ -397,21 +396,21 @@ class WebRtc extends Component {
         }
       }
     }
-
+    this.setState({ query: query });
     console.log('Sent all Data!');
     this.renderMessage(data);
   }
 
-  privateSend = (target, query) => {
-    // Split message.
-    let CHUNK_LEN = 4000; // 64000
+  privateSend = async (target, query) => {
+    let CHUNK_LEN = 4000;
 
     let resObj = {};
     resObj['sender'] = myID;
-    resObj['query'] = query;
     resObj['type'] = 'response';
-    resObj['response'] = this.randomx();
+    resObj['query'] = query;
 
+    resObj['data'] = await mongoSearch(collection, query);
+    console.log(resObj);
     let data = JSON.stringify(resObj);
 
     let len = data.length;
@@ -423,13 +422,11 @@ class WebRtc extends Component {
       return;
     }
 
-    // length of data
     if (sendChannel[target].readyState === 'open') {
       console.log("Private: Sending a data of length: " + len);
       sendChannel[target].send(len);
     }
 
-    // split the text and send in chunks of about 64KB
     if (sendChannel[target].readyState === 'open') {
       for (let i = 0; i < n; i++) {
         let start = i * CHUNK_LEN,
@@ -439,7 +436,6 @@ class WebRtc extends Component {
       }
     }
 
-    // send the remainder
     if (sendChannel[target].readyState === 'open') {
       if (len % CHUNK_LEN) {
         console.log(n * CHUNK_LEN + ' - ' + len);
@@ -448,35 +444,38 @@ class WebRtc extends Component {
     }
 
     console.log('Sent all Data!');
-    // this.appender(target, query, requestScreen);
     this.setState(prevState => ({ request: [...prevState.request, { from: target, query: query, key: uuid() }] }))
   }
 
-  renderMessage = (data) => {
-    let obj = JSON.parse(data);
-    let type = obj.type;
+  renderMessage = async (msg) => {
+    let obj = JSON.parse(msg);
     let sender = obj.sender;
-    let text = obj.response;
+    let type = obj.type;
     let query = obj.query;
+    let data = obj.data;
 
+    let results = [];
     if (type === 'request') {
-      // (sender === myID) && searchDB(); search your own DB
-      (sender !== myID) && this.privateSend(sender, text);
-    } else {
-      // (sender === myID) && postResultFromDB(); post your results
-      if (sender !== myID) {
-        // let atleast = false;
-        // let res = this.state.response.map(r => {
-        //   if (r.query === query) {
-        //     atleast = true;
-        //     return { query: r.query, datas: [...r.datas, { sender: sender, text: text, key: uuid() }], key: r.key }
-        //   }
-        //   return r;
-        // })
-        // if (atleast) this.setState({ response: res });
-        // else
-        this.setState(st => ({ response: [...st.response, { query: query, datas: [{ sender: sender, text: text, key: uuid() }], key: uuid() }] }))
+      if (sender === myID) {
+        let tempResults = await mongoSearch(collection, obj);
+        results = [...results, ...tempResults];
+        let response = results.map(r => {
+          if(r.key) return r;
+          else return {...r, key: uuid()};
+        });
+        this.setState({ response: response });
+      } else {
+        this.privateSend(sender, query);
       }
+    } else {
+      results = [...results, ...data];
+      results.sort(compare);
+      let response = results.map(r => {
+        if (r.key) return r;
+        else return { ...r, key: uuid() };
+      })
+
+      this.setState({ response: response });
     }
   }
 
@@ -495,7 +494,12 @@ class WebRtc extends Component {
     return urls[idx];
   }
 
-  componentDidMount() {
+  async componentDidMount() {
+    const client = new MongoClient(url);
+    await client.connect();
+    const database = client.db('mydb');
+    collection = database.collection('dse');
+
     socket = io('http://localhost:3000');
     opc = {};
     apc = {};
@@ -550,10 +554,10 @@ class WebRtc extends Component {
     }
     return (
       <div class="WebRtc">
-        <h3>Room: {this.props.room}</h3>
+        <h1>Room: {this.props.room}</h1>
         <div class="row">
-          <Query queries={this.state.response} />
-          <Request requests={this.state.request} />
+          <Query queries={this.state.response} query={this.state.query} now={this.state.now} />
+          {/* <Request requests={this.state.request} /> */}
           <Peers peers={this.state.active} />
         </div>
         <div class="WebRtc-bottom">

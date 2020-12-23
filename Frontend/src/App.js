@@ -3,7 +3,7 @@ import logo from './logo.svg';
 import './styles/App.css';
 import Router from './Router';
 import NavBar from './NavBar';
-import { nameFun } from './Usernames.js';
+import { nameFun } from './Usernames';
 
 class App extends Component {
   constructor() {

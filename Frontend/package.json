@@ -12,8 +12,11 @@
     "@testing-library/user-event": "^12.5.0",
     "axios": "^0.21.0",
     "bootstrap": "^4.5.3",
+    "concurrently": "^5.3.0",
+    "cross-env": "^7.0.3",
+    "electron": "^11.1.1",
     "jquery": "^3.5.1",
-    "localforage": "^1.9.0",
+    "mongodb": "^3.6.3",
     "popper.js": "^1.16.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
@@ -21,13 +24,16 @@
     "react-scripts": "4.0.1",
     "socket.io-client": "^3.0.3",
     "uuid": "^8.3.1",
+    "wait-on": "^5.2.0",
     "web-vitals": "^0.2.4"
   },
+  "main": "main.js",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "electron-react": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron .\""
   },
   "eslintConfig": {
     "extends": [

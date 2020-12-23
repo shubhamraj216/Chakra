@@ -1,20 +1,23 @@
 import React, { Component } from 'react';
-import './styles/Query.css'
+import './styles/Query.css';
 class Query extends Component {
   render() {
-    let res = this.props.queries.reverse().map(query =>
-      <ul key={query.key} >
-        <li class='Query-child'>{query.query}</li>
-        {query.datas.map(data =>
-          <li class='Query-child' key={data.key}>{data.sender.substr(0, data.sender.search('/'))}: {data.text}</li>
-        )}
-        <hr />
-      </ul>
+    let res = this.props.queries.map(query =>
+      <li class='Query-child' key={query.key}><a href={`${query.address}`} target='_blank' rel='noreferrer'>{query.address}</a><hr></hr></li>
     )
+    let alpha, beta;
+    if (this.props.queries.length > 0) {
+      alpha = <h6>About {this.props.queries.length} results ({(new Date() / 1000 - this.props.now).toFixed(4)} seconds)</h6>
+      beta = `: ${this.props.query}`;
+    }
+    console.log(this.props.queries)
     return (
-      <div class='Query col-6 scroll'>
-        <h3 className='mt-3'>Queries</h3>
-        {res}
+      <div class='Query col-10 scroll'>
+        <h3 className='mt-3 Query-head'>Search Results {beta}</h3>
+        {alpha}
+        <ul className='qq'>
+          {res}
+        </ul>
       </div>
     )
   }
