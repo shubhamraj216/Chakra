@@ -1,6 +1,7 @@
 .Form {
   line-height: 2;
   /* text-align: center; */
+  background-color: #111111;
 }
 
 .Form-input {

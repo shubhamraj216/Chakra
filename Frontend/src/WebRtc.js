@@ -409,7 +409,7 @@ class WebRtc extends Component {
     resObj['type'] = 'response';
     resObj['query'] = query;
 
-    resObj['data'] = await mongoSearch(collection, query);
+    resObj['data'] = await mongoSearch(collection, resObj);
     console.log(resObj);
     let data = JSON.stringify(resObj);
 
@@ -495,7 +495,7 @@ class WebRtc extends Component {
   }
 
   async componentDidMount() {
-    const client = new MongoClient(url);
+    const client = new MongoClient(url, { useUnifiedTopology: true });
     await client.connect();
     const database = client.db('mydb');
     collection = database.collection('dse');

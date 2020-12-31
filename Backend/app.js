@@ -18,7 +18,8 @@ app.use(express.static(__dirname + '/public'));
 // Routes
 app.use('/getRooms', function(req, res, next) {
   req.config = {
-    room: [...room]
+    // room: [...room]
+    room: ['General', 'Movies', 'Cricket', 'Football', 'Art', 'Sports', 'Music', 'Hollywood', ...room]
   }
   next();
 }, getRoomsRouter);
