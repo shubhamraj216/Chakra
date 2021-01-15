@@ -513,7 +513,7 @@ class WebRtc extends Component {
 
     this.joinRoom(room);
 
-    setTimeout(() => this.setState({ joining: false }), 2000);
+    setTimeout(() => this.setState({ joining: false }), 1000);
   }
 
   handleQuery(query) {
@@ -562,7 +562,7 @@ class WebRtc extends Component {
         </div>
         <div class="WebRtc-bottom">
           <Form search={this.handleQuery} class="WebRtc-form" />
-          <button onClick={this.handleClick} class="WebRtc-back"><Link to="/" class="WebRtc-link">Exit Room</Link></button>
+          <Link to="/"><button onClick={this.handleClick} class="WebRtc-back">Exit Room</button></Link>
         </div>
       </div>
     );

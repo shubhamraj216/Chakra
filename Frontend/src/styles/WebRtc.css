@@ -8,26 +8,18 @@
 .WebRtc-back {
   width: 50%;
   margin: 10px;
-  color: white;
   background-color: #0000002c;
   border: 10px solid #111111;
   border-radius: 40px;
   line-height: 2.5;
-}
-
-.WebRtc-back:hover {
-  color: #ffffff;
-  background-color: rgb(255, 0, 0);
-  border: 10px solid #111111;
-}
-
-.WebRtc-link {
   color: white;
   letter-spacing: 1em;
   text-transform: uppercase;
 }
 
-.WebRtc-link:hover {
+.WebRtc-back:hover {
+  background-color: rgb(255, 0, 0);
+  border: 10px solid #111111;
   color: black;
   text-decoration: none;
 }

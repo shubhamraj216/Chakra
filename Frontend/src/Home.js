@@ -9,6 +9,10 @@ import SearchRoom from './SearchRoom';
 import './styles/Home.css';
 
 class Home extends Component {
+  static defaultProps = {
+    maxShow: 17
+  }
+
   constructor() {
     super();
     this.state = {
@@ -86,14 +90,16 @@ class Home extends Component {
     }
 
     let searchRooms = this.state.rooms.filter(room => room.room.toLowerCase().includes(this.state.searchRoom.toLowerCase()));
-    let rooms = searchRooms.map(room =>
+    let rooms = searchRooms.slice(0, Math.min(this.props.maxShow, searchRooms.length)).map(room =>
       <Link key={room.key}
-        class="Home-room col-md-4 col-sm-6 sol-xs-12"
+        class="Home-room col-md-4 col-sm-6 col-xs-12"
         to={`/${room.room}`}
       >
         {room.room}
       </Link>
     )
+    
+    let extra = <div class="Home-room-extra col-md-4 col-sm-6 col-xs-12">{searchRooms.length - this.props.maxShow} more rooms...</div>
     return (
       <div class="Home row">
         <NewRoom value={this.state.newRoom}
@@ -105,6 +111,7 @@ class Home extends Component {
         />
         <button onClick={this.handleClick} class="col-lg-3 col-xs-12 Home-refresh"><FontAwesomeIcon className='Home-fa' icon={faRedo} />Refresh</button>
         {rooms}
+        {(searchRooms.length > this.props.maxShow) && extra}
       </div>
     );
   }

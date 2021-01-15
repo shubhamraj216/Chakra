@@ -20,6 +20,15 @@
   text-decoration: none;
 }
 
+.Home-room-extra {
+  width: 100%;
+  line-height: 3;
+  height: 10%;
+  color: white;
+  border: 10px solid #111111;
+  border-radius: 40px;
+}
+
 .Home-refresh {
   width: 20%;
   margin: 10px;
